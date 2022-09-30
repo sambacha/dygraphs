@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Generate docs/options.html
 
@@ -16,13 +16,15 @@ debug_tests = []  # [ 'tests/zoom.html' ]
 # Pull options reference JSON out of dygraph.js
 js = ''
 in_json = False
-for line in file('src/dygraph-options-reference.js'):
-  if '<JSON>' in line:
-    in_json = True
-  elif '</JSON>' in line:
-    in_json = False
-  elif in_json:
-    js += line
+with open('src/dygraph-options-reference.js', 'rt',
+          encoding='UTF-8', errors='strict', newline=None) as infile:
+  for line in infile:
+    if '<JSON>' in line:
+      in_json = True
+    elif '</JSON>' in line:
+      in_json = False
+    elif in_json:
+      js += line
 
 # TODO(danvk): better errors here.
 assert js
@@ -49,13 +51,21 @@ def find_braces(txt):
       level -= 1
   return out
 
+ext_tests = []
+
 def search_files(type, files):
   # Find text followed by a colon. These won't all be options, but those that
   # have the same name as a Dygraph option probably will be.
   prop_re = re.compile(r'\b([a-zA-Z0-9]+) *:')
   for test_file in files:
     if os.path.isfile(test_file): # Basically skips directories
-      text = file(test_file).read()
+      with open(test_file, 'rt',
+                encoding='UTF-8', errors='strict', newline=None) as infile:
+        text = infile.read()
+
+      if type == "tests":
+        if text.find('src="http') >= 0:
+          ext_tests.append(test_file)
 
       # Hack for slipping past gallery demos that have title in their attributes
       # so they don't appear as reasons for the demo to have 'title' options.
@@ -65,11 +75,11 @@ def search_files(type, files):
           text = text[idx:]
       braced_html = find_braces(text)
       if debug_tests:
-        print braced_html
+        print(braced_html)
 
       ms = re.findall(prop_re, braced_html)
       for opt in ms:
-        if debug_tests: print '\n'.join(ms)
+        if debug_tests: print('\n'.join(ms))
         if opt in docs and test_file not in docs[opt][type]:
           docs[opt][type].append(test_file)
 
@@ -80,12 +90,12 @@ if debug_tests: sys.exit(0)
 
 # Extract a labels list.
 labels = []
-for _, opt in docs.iteritems():
+for _, opt in docs.items():
   for label in opt['labels']:
     if label not in labels:
       labels.append(label)
 
-print """
+print("""
 <!--#include virtual="header.html" -->
 
 <!--
@@ -96,19 +106,19 @@ print """
 
 <link rel=stylesheet href="options.css" />
 
-"""
+""")
 
-print """
+print("""
 <div class="col-lg-3">
 <div class="dygraphs-side-nav affix-top" data-spy="affix" data-offset-top="0">
 <ul class='nav'>
   <li><a href="#usage">Usage</a>
-"""
+""")
 for label in sorted(labels):
-  print '  <li><a href="#%s">%s</a>\n' % (label, label)
-print '</ul></div></div>\n\n'
+  print('  <li><a href="#%s">%s</a>\n' % (label, label))
+print('</ul></div></div>\n\n')
 
-print """
+print("""
 <div id='content' class='col-lg-9'>
 <h2>Options Reference</h2>
 <p>Dygraphs tries to do a good job of displaying your data without any further configuration. But inevitably, you're going to want to tinker. Dygraphs provides a rich set of options for configuring its display and behavior.</p>
@@ -135,8 +145,10 @@ print """
 
 <p>For options which are functions (e.g. callbacks and formatters), the value of <code>this</code> is set to the Dygraph object.</p>
 
+<p>Note: tests marked with ⚠ access external resources, such as Google’s jsapi.</p>
+
 <p>And, without further ado, here's the complete list of options:</p>
-"""
+""")
 
 def test_name(f):
   """Takes 'tests/demo.html' -> 'demo'"""
@@ -150,9 +162,15 @@ def urlify_gallery(f):
   """Takes 'gallery/demo.js' -> 'demo'"""
   return f.replace('gallery/', 'gallery/#g/').replace('.js', '')
 
+def test_fmt(f):
+  res = '<a href="%s">%s</a>' % (f, test_name(f))
+  if f in ext_tests:
+    res += '<b class="extlink">⚠</b>'
+  return res
+
 
 for label in sorted(labels):
-  print '<a name="%s"></a><h3>%s</h3>\n' % (label, label)
+  print('<a name="%s"></a><h3>%s</h3>\n' % (label, label))
 
   for opt_name in sorted(docs.keys()):
     opt = docs[opt_name]
@@ -161,8 +179,7 @@ for label in sorted(labels):
     if not tests:
       examples_html = '<font color=red>NONE</font>'
     else:
-      examples_html = ' '.join(
-        '<a href="%s">%s</a>' % (f, test_name(f)) for f in tests)
+      examples_html = ' '.join(test_fmt(f) for f in tests)
 
     gallery = opt['gallery']
     if not gallery:
@@ -182,26 +199,29 @@ for label in sorted(labels):
     if not opt['default']: opt['default'] = '(missing)'
     if not opt['description']: opt['description'] = '(missing)'
 
-    print """
-  <div class='option'><a name="%(name)s"></a><b>%(name)s</b>
+    print("""
+  <div class='option'><p>
+  <a name="%(name)s"></a><b>%(name)s</b>
   <a class="link" href="#%(name)s">#</a>
-  <br/>
-  <p>%(desc)s</p>
+  </p><p>
+  %(desc)s
+  </p><p>
   <i>Type: %(type)s</i><br/>%(parameters)s
-  <i>Default: %(default)s</i></p>
+  <i>Default: %(default)s</i>
+  </p><p>
   Gallery Samples: %(gallery_html)s<br/>
   Other Examples: %(examples_html)s<br/>
-  <br/></div>
+  </p></div>
   """ % { 'name': opt_name,
           'type': opt['type'],
           'parameters': parameters_html,
           'default': opt['default'],
           'desc': opt['description'],
           'examples_html': examples_html,
-          'gallery_html': gallery_html}
+          'gallery_html': gallery_html})
 
 
-print """
+print("""
 <a name="point_properties"></a><h3>Point Properties</h3>
 Some callbacks take a point argument. Its properties are:<br/>
 <ul>
@@ -213,7 +233,7 @@ Some callbacks take a point argument. Its properties are:<br/>
 </div> <!-- #content -->
 
 <!--#include virtual="footer.html" -->
-"""
+""")
 
 # This page was super-helpful:
 # http://jsbeautifier.org/

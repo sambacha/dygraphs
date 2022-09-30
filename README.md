@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/danvk/dygraphs.svg?branch=markdown-readme)](https://travis-ci.org/danvk/dygraphs) [![Coverage Status](https://img.shields.io/coveralls/danvk/dygraphs.svg)](https://coveralls.io/r/danvk/dygraphs)
+(fork for Debian packaging)
 # dygraphs JavaScript charting library
 
 The dygraphs JavaScript library produces interactive, zoomable charts of time series:
 
-<img src="https://cloud.githubusercontent.com/assets/98301/5311286/eb760eea-7c10-11e4-9a59-1d144e51a15b.png" width="618" height="322">
+![sample graph](screenshot.png)
 
 Learn more about it at [dygraphs.com](http://www.dygraphs.com).
 
@@ -27,7 +27,7 @@ Get help with dygraphs by browsing the  on [Stack Overflow][] (preferred) and [G
 </head>
 <body>
 <div id="graphdiv"></div>
-<script type="text/javascript">
+<script type="text/javascript"><!--//--><![CDATA[//><!--
   g = new Dygraph(
         document.getElementById("graphdiv"),  // containing div
         "Date,Temperature\n" +                // the data series
@@ -36,7 +36,7 @@ Get help with dygraphs by browsing the  on [Stack Overflow][] (preferred) and [G
         "2008-05-09,80\n",
         { }                                   // the options
       );
-</script>
+//--><!]]></script>
 </body>
 </html>
 ```
@@ -75,7 +75,7 @@ Then open `tests/demo.html` in your browser.
 Read more about the dygraphs development process in the [developer guide](/DEVELOP.md).
 
 ## License(s)
-dygraphs is available under the MIT license, included in LICENSE.txt.
+dygraphs is available under the MIT license, included in [LICENSE.txt](./LICENSE.txt).
 
 [cdnjs]: https://cdnjs.com/libraries/dygraph
 [the tutorial]: http://www.dygraphs.com/tutorial.html

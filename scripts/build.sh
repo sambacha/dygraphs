@@ -1,22 +1,31 @@
-#!/bin/bash
+#!/bin/mksh
 # This generates everything under dist:
 # bundled JS, minified JS, minified CSS and source maps.
 set -o errexit
 
-mkdir -p dist
+rm -rf dist disttmp
+mkdir dist disttmp
 
 # Create dist/dygraph.js
+rm -f LICENCE.js
+{
+  echo '/*'
+  sed -e 's/^/ * /' -e 's/  *$//' <LICENSE.txt
+  echo ' */'
+} >LICENCE.js
 browserify \
   -v \
   -t babelify \
   -t [ envify --NODE_ENV development ] \
   --debug \
   --standalone Dygraph \
+  LICENCE.js \
   src/dygraph.js \
-  > dist/dygraph.tmp.js
+  >disttmp/dygraph.tmp.js
 
 # Create dist/dygraph.js.map
-cat dist/dygraph.tmp.js | exorcist --base . dist/dygraph.js.map > dist/dygraph.js
+exorcist --base . dist/dygraph.js.map <disttmp/dygraph.tmp.js >dist/dygraph.js
+rm LICENCE.js
 
 # Create "production" bundle for minification
 browserify \
@@ -26,24 +35,22 @@ browserify \
   --debug \
   --standalone Dygraph \
   src/dygraph.js \
-  > dist/dygraph.tmp.js
+  >disttmp/dygraph.tmp.js
 
 # Create dist/dygraph.tmp.js.map
-cat dist/dygraph.tmp.js | exorcist --base . dist/dygraph.tmp.js.map > /dev/null
+exorcist --base . disttmp/dygraph.tmp.js.map <disttmp/dygraph.tmp.js >/dev/null
 
-header='/*! @license Copyright 2017 Dan Vanderkam (danvdk@gmail.com) MIT-licensed (http://opensource.org/licenses/MIT) */'
+header='/*! @license Copyright 2022 Dan Vanderkam (danvdk@gmail.com) and others; MIT-licenced: https://opensource.org/licenses/MIT */'
 
 # Create dist/dygraph.js.min{,.map}
 uglifyjs --compress --mangle \
   --preamble "$header" \
-  --in-source-map dist/dygraph.tmp.js.map \
+  --in-source-map disttmp/dygraph.tmp.js.map \
   --source-map-include-sources \
   --source-map dist/dygraph.min.js.map \
+  --source-map-url dygraph.min.js.map \
   -o dist/dygraph.min.js \
-  dist/dygraph.tmp.js
-
-# Build GWT JAR
-jar -cf dist/dygraph-gwt.jar -C gwt org
+  disttmp/dygraph.tmp.js
 
 # Minify CSS
 cp css/dygraph.css dist/
@@ -53,5 +60,16 @@ cleancss css/dygraph.css -o dist/dygraph.min.css --source-map --source-map-inlin
 babel src -d src-es5 --compact false
 
 # Remove temp files.
-rm dist/dygraph.tmp.js
-rm dist/dygraph.tmp.js.map
+rm -rf disttmp
+
+# Build documentation.
+scripts/build-docs.sh
+
+# This is for on the webserver
+rm -rf site
+mkdir site
+rsync -avzr src src/extras dist site
+rsync -avzr --copy-links dist/* docroot/!(dist) docroot/.* site/
+ln -sf src/extras site/.extras # until we copy src-es5
+#ln -sf src-es5/extras site/.extras
+find site -print0 | xargs -0r chmod a+rX --

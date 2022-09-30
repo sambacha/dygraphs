@@ -1,8 +1,20 @@
-language: node_js
-node_js:
-  - "6"
+dist: focal
 
-sudo: false  # Use container-based architecture
+before_install:
+  - env TMPDIR=/tmp npm install -g phantomjs@1.9.20
+  - env TMPDIR=/tmp npm install
+
+addons:
+  apt:
+    packages:
+    - ed
+    - jsdoc-toolkit
+    - libjs-bootstrap
+    - libjs-jquery
+    - libjs-jquery-ui
+    - mksh
+    - pax
+
 script: >
     npm run build &&
     npm run build-tests &&

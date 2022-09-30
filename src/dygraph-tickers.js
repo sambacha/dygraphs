@@ -1,13 +1,15 @@
 /**
  * @license
  * Copyright 2011 Dan Vanderkam (danvdk@gmail.com)
- * MIT-licensed (http://opensource.org/licenses/MIT)
+ * MIT-licenced: https://opensource.org/licenses/MIT
  */
 
 /**
  * @fileoverview Description of this file.
  * @author danvk@google.com (Dan Vanderkam)
- *
+ */
+
+/*
  * A ticker is a function with the following interface:
  *
  * function(a, b, pixels, options_view, dygraph, forced_values);
@@ -402,7 +404,7 @@ export var getDateAxis = function(start_time, end_time, granularity, opts, dg) {
     // This will put the ticks on Sundays.
     start_date_offset = accessors.getDay(start_date);
   }
-  
+
   date_array[datefield] -= start_date_offset;
   for (var df = datefield + 1; df < DateField.NUM_DATEFIELDS; df++) {
     // The minimum value is 1 for the day of month, and 0 for all other fields.

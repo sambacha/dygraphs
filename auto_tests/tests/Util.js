@@ -1,4 +1,4 @@
-/** 
+/**
  * @fileoverview Utility functions for Dygraphs.
  *
  * @author konigsberg@google.com (Robert Konigsberg)
@@ -56,8 +56,7 @@ Util.getClassTexts = function(css_class, parent) {
 
 // Convert &nbsp; to a normal space
 Util.nbspToSpace = function(str) {
-  var re = new RegExp(String.fromCharCode(160), 'g');
-  return str.replace(re, ' ');
+  return str.replace(/ /g, ' ');
 };
 
 Util.getLegend = function(parent) {
